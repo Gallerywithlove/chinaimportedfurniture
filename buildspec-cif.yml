@@ -1,0 +1,40 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo install phase
+  pre_build:
+    commands:
+      - pwd
+      - ls -lrta
+      # - npm install --location=global @angular/cli@latest
+      # # - npm install --location=global @angular/cli@13.3.8
+      # - npm install --legacy-peer-deps
+      # # - npm update --force
+      # - npm install popper.js --save
+  build:
+    commands:
+      - echo Build Started
+      - pwd
+      - ls -lrta
+      - echo Files were uploaded unto s3 bucket
+      # Get the size of the bucket
+      - aws s3 ls s3://www.chinaimportedfurniture.com  --recursive --human-readable --summarize --region ap-south-2
+      # Remove Bucket Content
+      - aws s3 rm s3://www.chinaimportedfurniture.com/ --recursive --region ap-south-2
+      # Upload the code to s3 bucket
+      - aws s3 sync . s3://www.chinaimportedfurniture.com/ --region ap-south-2
+      - aws s3 ls s3://www.chinaimportedfurniture.com  --recursive --human-readable --summarize --region ap-south-2
+  post_build:
+    commands:
+      - echo "post build started `date`"
+      # Deploy the code using cloudfront Distribution
+      - aws cloudfront create-invalidation --distribution-id E1YLVE2ZMBGBLZ --paths "/*"
+      - echo "Code has been deployed unto CloudFront `date`"
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
